@@ -58,45 +58,42 @@ export default function Home() {
       const sessionAttendance = sessionId ? allAttendance.filter(r => (r.sessionId && (r.sessionId._id || r.sessionId) === sessionId)) : []
       const presentCount = sessionAttendance.length
 
-      // Build attendance counts for each member
-      const memberAttendanceCounts = {}
+      // Build session attendance map
       const memberSessionAttendance = {}
-
-      allAttendance.forEach(r => {
+      sessionAttendance.forEach(r => {
         const mid = r.memberId && (r.memberId._id || r.memberId)
         if (mid) {
-          memberAttendanceCounts[mid] = (memberAttendanceCounts[mid] || 0) + 1
-          
-          if (sessionId) {
-            const rsid = r.sessionId && (r.sessionId._id || r.sessionId)
-            if (rsid === sessionId) {
-              memberSessionAttendance[mid] = true
-            }
-          }
+          memberSessionAttendance[mid] = true
         }
       })
 
       // Determine status for each member
       const statusMap = {}
+      const now = new Date()
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      let firstTimersCount = 0
+
       members.forEach(m => {
         const mid = m._id
-        const count = memberAttendanceCounts[mid] || 0
-        
-        if (memberSessionAttendance[mid]) {
+        const isPresent = memberSessionAttendance[mid]
+
+        if (isPresent) {
           statusMap[mid] = 'Present'
-        } else if (count === 1) {
-          statusMap[mid] = 'First Timer'
-        } else if (count > 1) {
-          statusMap[mid] = 'Absent'
         } else {
-          statusMap[mid] = 'New'
+          // Check if first timer (registered < 24 hours ago)
+          const registrationDate = m.first_scan_date ? new Date(m.first_scan_date) : null
+          const isFirstTimer = registrationDate && registrationDate > twentyFourHoursAgo
+          
+          if (isFirstTimer) {
+            statusMap[mid] = 'New'
+            firstTimersCount++
+          } else {
+            statusMap[mid] = 'Absent'
+          }
         }
       })
 
       setMemberStatus(statusMap)
-
-      // First timers: members with exactly one attendance record
-      const firstTimersCount = Object.values(memberAttendanceCounts).filter(count => count === 1).length
 
       const absentCount = members.length - presentCount
 
@@ -239,7 +236,7 @@ export default function Home() {
             {filteredMembers.length > 0 && (
               <ul className="space-y-2 max-h-64 overflow-y-auto border rounded p-2 bg-gray-50">
                 {filteredMembers.map(member => {
-                  const status = memberStatus[member._id] || 'Registered'
+                  const status = memberStatus[member._id] || 'Absent'
                   return (
                     <li key={member._id} className="flex items-center justify-between p-2 bg-white rounded border">
                       <div className="flex-1">
@@ -247,7 +244,7 @@ export default function Home() {
                         <div className="text-xs text-gray-500">{member.email || member.phone}</div>
                         <div className={`text-xs font-semibold mt-1 inline-block px-2 py-0.5 rounded ${
                           status === 'Present' ? 'bg-green-100 text-green-800' :
-                          status === 'First Timer' ? 'bg-blue-100 text-blue-800' :
+                          status === 'New' ? 'bg-blue-100 text-blue-800' :
                           status === 'Absent' ? 'bg-orange-100 text-orange-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
