@@ -170,7 +170,7 @@ export default function Home() {
       </header>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Left Column: Stats */}
+        {/* Left Column: Stats .*/}
         <div>
           <div className="card">
             <div className="flex justify-between items-start mb-4">
