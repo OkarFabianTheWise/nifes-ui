@@ -6,7 +6,6 @@ import MemberModal from '../components/MemberModal'
 import MembersRollCall from '../components/MembersRollCall'
 import axios from 'axios'
 import Link from 'next/link'
-import Image from 'next/image'
 
 export default function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
@@ -167,15 +166,7 @@ export default function Home() {
     <div className="container">
       <header className="card mb-6 text-center">
         <div className="flex justify-center mb-4">
-          <div style={{width: '48px', height: '48px', position: 'relative'}}>
-            <Image 
-              src="/nifes-logo.png" 
-              alt="NIFES Logo" 
-              fill 
-              style={{objectFit: 'contain'}}
-              priority={false}
-            />
-          </div>
+          <img src="/nifes-logo.png" alt="NIFES Logo" style={{width: '48px', height: '48px', objectFit: 'contain'}} />
         </div>
         <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Fellowship Attendance Dashboard</h1>
         <p className="text-gray-600">Manage attendance with QR and manual registration</p>
