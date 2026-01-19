@@ -27,24 +27,24 @@ export function AttendanceActions({
         duration: 0.5,
         delay: 0.4,
       }}
-      className="rounded-2xl border border-stone-200 dark:border-white/10 bg-white/80 dark:bg-white/5 p-6 backdrop-blur-xl shadow-lg shadow-stone-900/5 dark:shadow-none"
+      className="rounded-2xl border border-indigo-200 dark:border-white/10 bg-white/80 dark:bg-white/5 p-6 backdrop-blur-xl shadow-lg shadow-indigo-900/5 dark:shadow-none"
     >
-      <h3 className="mb-4 text-lg font-medium text-stone-900 dark:text-white">
+      <h3 className="mb-4 text-lg font-medium text-indigo-900 dark:text-white">
         Quick Actions
       </h3>
-      <p className="mb-6 text-sm text-stone-600 dark:text-gray-400">
+      <p className="mb-6 text-sm text-indigo-600 dark:text-gray-400">
         Manually register members or search for existing records.
       </p>
 
       <div className="flex flex-col gap-4 sm:flex-row mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400 dark:text-gray-500" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search member name..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-black/20 py-3 pl-10 pr-4 text-sm text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-gray-500 backdrop-blur-sm transition-all focus:border-blue-500 dark:focus:border-blue-500/50 focus:bg-white dark:focus:bg-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-500/50"
+            className="w-full rounded-xl border border-indigo-200 dark:border-white/10 bg-indigo-50 dark:bg-black/20 py-3 pl-10 pr-4 text-sm text-indigo-900 dark:text-white placeholder-indigo-400 dark:placeholder-gray-500 backdrop-blur-sm transition-all focus:border-indigo-500 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-black/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/50"
           />
         </div>
         <button
@@ -58,19 +58,19 @@ export function AttendanceActions({
 
       {/* Search Results */}
       {filteredMembers.length > 0 && (
-        <div className="space-y-2 max-h-64 overflow-y-auto border rounded-xl p-3 bg-stone-50 dark:bg-black/20">
+        <div className="space-y-2 max-h-64 overflow-y-auto border border-indigo-200 dark:border-white/10 rounded-xl p-3 bg-indigo-50 dark:bg-black/20">
           {filteredMembers.map((member) => {
             const status = memberStatus[member._id] || 'Absent'
             return (
               <div
                 key={member._id}
-                className="flex items-center justify-between p-3 bg-white dark:bg-white/5 rounded-lg border border-stone-200 dark:border-white/10 hover:shadow-md transition-all"
+                className="flex items-center justify-between p-3 bg-white dark:bg-white/5 rounded-lg border border-indigo-200 dark:border-white/10 hover:shadow-md transition-all"
               >
                 <div className="flex-1">
-                  <div className="font-medium text-sm text-stone-900 dark:text-white">
+                  <div className="font-medium text-sm text-indigo-900 dark:text-white">
                     {member.name}
                   </div>
-                  <div className="text-xs text-stone-500 dark:text-gray-400">
+                  <div className="text-xs text-indigo-600 dark:text-gray-400">
                     {member.email || member.phone}
                   </div>
                   <div className={`text-xs font-semibold mt-1 inline-block px-2 py-0.5 rounded ${

@@ -5,7 +5,6 @@ import {
   UserCheck,
   UserPlus,
   UserX,
-  LayoutDashboard,
   Moon,
   Sun,
 } from 'lucide-react'
@@ -17,8 +16,9 @@ import { AttendanceActions } from '../components/AttendanceActions'
 import { SessionManagement } from '../components/SessionManagement'
 import MemberModal from '../components/MemberModal'
 import { useTheme } from '../hooks/useTheme'
+import { Toast } from '../components/Toast'
 
-const RegisterMemberModal = ({ open, onClose, onRegister }) => {
+const RegisterMemberModal = ({ open, onClose, onRegister, showToast }) => {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -27,8 +27,8 @@ const RegisterMemberModal = ({ open, onClose, onRegister }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!name.trim()) return alert('Name is required')
-    if (!phone.trim()) return alert('Phone is required')
+    if (!name.trim()) return showToast('Name is required', 'error')
+    if (!phone.trim()) return showToast('Phone is required', 'error')
 
     setLoading(true)
     try {
@@ -138,10 +138,96 @@ const RegisterMemberModal = ({ open, onClose, onRegister }) => {
   )
 }
 
+const CreateSessionModal = ({ open, onClose, onCreate, showToast }) => {
+  const [sessionName, setSessionName] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!sessionName.trim()) return showToast('Session name is required', 'error')
+
+    setLoading(true)
+    try {
+      await onCreate(sessionName)
+    } finally {
+      setLoading(false)
+      setSessionName('')
+    }
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white dark:bg-white/10 rounded-2xl p-6 w-full max-w-md border border-indigo-200 dark:border-white/10 backdrop-blur-xl"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-indigo-900 dark:text-white">
+            Create New Session
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-indigo-700 dark:text-gray-300 mb-2">
+              Session Name *
+            </label>
+            <input
+              type="text"
+              value={sessionName}
+              onChange={(e) => setSessionName(e.target.value)}
+              placeholder="e.g., Sunday Service, Meeting 1"
+              className="w-full p-3 border border-indigo-200 dark:border-white/10 rounded-lg bg-indigo-50 dark:bg-black/20 text-indigo-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              autoFocus
+            />
+          </div>
+
+          <div className="flex gap-2 mt-6 pt-4 border-t border-indigo-200 dark:border-white/10">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-500 transition-all disabled:opacity-50"
+            >
+              {loading ? 'Creating...' : 'Create Session'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-gray-300 dark:bg-white/10 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-400 dark:hover:bg-white/20 transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  )
+}
+
 export default function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
   const { theme, toggleTheme } = useTheme()
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState('success')
+  const [showToastNotif, setShowToastNotif] = useState(false)
+
+  const showToast = (message, type = 'success') => {
+    setToastMessage(message)
+    setToastType(type)
+    setShowToastNotif(true)
+  }
   const [session, setSession] = useState(null)
+  const [sessions, setSessions] = useState([])
+  const [loadingSessions, setLoadingSessions] = useState(false)
   const [stats, setStats] = useState({
     totalMembers: 0,
     presentToday: 0,
@@ -153,9 +239,16 @@ export default function Home() {
   const [memberStatus, setMemberStatus] = useState({})
   const [filteredMembers, setFilteredMembers] = useState([])
   const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [showNewSessionModal, setShowNewSessionModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState(null)
   const [loadingStats, setLoadingStats] = useState(false)
   const [loadingPresent, setLoadingPresent] = useState(null)
+
+  // Fetch sessions on mount
+  useEffect(() => {
+    fetchSessions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiUrl])
 
   useEffect(() => {
     refreshStats()
@@ -174,6 +267,24 @@ export default function Home() {
       setFilteredMembers([])
     }
   }, [searchQuery, allMembers])
+
+  async function fetchSessions() {
+    if (!apiUrl) return
+    setLoadingSessions(true)
+    try {
+      const res = await axios.get(`${apiUrl}/api/sessions`)
+      const sessionsData = res.data.sessions || res.data || []
+      setSessions(sessionsData)
+      // Auto-select the first session if available and none is selected
+      if (sessionsData.length > 0 && !session) {
+        setSession(sessionsData[0])
+      }
+    } catch (err) {
+      console.error('Failed to fetch sessions:', err)
+    } finally {
+      setLoadingSessions(false)
+    }
+  }
 
   async function refreshStats() {
     if (!apiUrl) return
@@ -253,15 +364,16 @@ export default function Home() {
   }
 
   async function markPresent(memberId) {
-    if (!apiUrl || !session) return alert('No session')
+    if (!apiUrl || !session) return showToast('No session selected', 'error')
     const member = allMembers.find((m) => m._id === memberId)
-    if (!member) return alert('Member not found')
+    if (!member) return showToast('Member not found', 'error')
     setLoadingPresent(memberId)
     try {
       await axios.post(`${apiUrl}/api/attendance`, {
         sessionId: session._id || session.id,
         email: member.email,
       })
+      showToast(`✓ ${member.name} marked present`, 'success')
       setSearchQuery('')
       await refreshStats()
     } catch (err) {
@@ -270,14 +382,14 @@ export default function Home() {
         err?.response?.data?.message ||
         err.message ||
         'Failed'
-      alert(msg)
+      showToast(msg, 'error')
     } finally {
       setLoadingPresent(null)
     }
   }
 
   async function registerAndMarkFromModal(newMemberData) {
-    if (!apiUrl || !session) return alert('No session')
+    if (!apiUrl || !session) return showToast('No session selected', 'error')
     try {
       const response = await axios.post(`${apiUrl}/api/members`, {
         sessionId: session._id || session.id,
@@ -298,7 +410,35 @@ export default function Home() {
         err?.response?.data?.message ||
         err.message ||
         'Failed'
-      alert(msg)
+      showToast(msg, 'error')
+    }
+  }
+
+  async function createNewSession(sessionName) {
+    if (!apiUrl) return showToast('API URL not configured', 'error')
+    if (!sessionName.trim()) return showToast('Session name is required', 'error')
+    
+    try {
+      const response = await axios.post(`${apiUrl}/api/sessions`, {
+        name: sessionName,
+        date: new Date(),
+      })
+      const newSession = response.data.session || response.data
+      setSession(newSession)
+      setSessions([...sessions, newSession])
+      setShowNewSessionModal(false)
+      setSuccessMessage({
+        name: sessionName,
+        message: 'Session created successfully!',
+      })
+      refreshStats()
+    } catch (err) {
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err.message ||
+        'Failed to create session'
+      showToast(msg, 'error')
     }
   }
 
@@ -315,16 +455,16 @@ export default function Home() {
     : ''
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-stone-50 dark:bg-[#0a0a0a] text-stone-800 dark:text-gray-200 font-sans selection:bg-blue-500/30 transition-colors duration-300">
+    <div className="relative min-h-screen w-full overflow-hidden bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-900 dark:text-gray-200 font-sans selection:bg-indigo-500/30 transition-colors duration-300">
       {/* Background Depth Elements */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         {/* Light theme background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-stone-50 via-blue-50/30 to-purple-50/20 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#050505]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50/40 to-blue-50/30 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#050505]" />
 
         {/* Mesh gradients */}
-        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-400/5 dark:bg-blue-900/10 rounded-full blur-[140px] opacity-60 dark:opacity-30 mix-blend-normal dark:mix-blend-screen" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-400/5 dark:bg-indigo-900/10 rounded-full blur-[120px] opacity-50 dark:opacity-20 mix-blend-normal dark:mix-blend-screen" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-400/3 dark:bg-blue-900/5 rounded-full blur-[160px] opacity-40" />
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-indigo-400/10 dark:bg-blue-900/10 rounded-full blur-[140px] opacity-60 dark:opacity-30 mix-blend-normal dark:mix-blend-screen" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-400/10 dark:bg-indigo-900/10 rounded-full blur-[120px] opacity-50 dark:opacity-20 mix-blend-normal dark:mix-blend-screen" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-400/5 dark:bg-blue-900/5 rounded-full blur-[160px] opacity-40" />
 
         {/* Subtle texture overlay */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.015] dark:opacity-[0.03]" />
@@ -347,13 +487,13 @@ export default function Home() {
               duration: 0.4,
             }}
             onClick={toggleTheme}
-            className="absolute right-0 top-0 flex items-center gap-2 rounded-2xl border border-stone-200 dark:border-white/10 bg-white/80 dark:bg-white/5 px-4 py-2.5 backdrop-blur-xl transition-all hover:bg-white dark:hover:bg-white/10 hover:shadow-lg hover:shadow-blue-500/5 dark:hover:shadow-blue-900/20 active:scale-95"
+            className="absolute right-0 top-0 flex items-center gap-2 rounded-2xl border border-indigo-200 dark:border-white/10 bg-white/80 dark:bg-white/5 px-4 py-2.5 backdrop-blur-xl transition-all hover:bg-white dark:hover:bg-white/10 hover:shadow-lg hover:shadow-indigo-500/5 dark:hover:shadow-blue-900/20 active:scale-95"
             aria-label="Toggle theme"
           >
             {theme === 'light' ? (
               <>
-                <Moon className="h-4 w-4 text-stone-600 dark:text-gray-400" />
-                <span className="text-sm font-medium text-stone-700 dark:text-gray-300">
+                <Moon className="h-4 w-4 text-indigo-600 dark:text-gray-400" />
+                <span className="text-sm font-medium text-indigo-700 dark:text-gray-300">
                   Dark
                 </span>
               </>
@@ -367,7 +507,9 @@ export default function Home() {
             )}
           </motion.button>
 
-          <motion.div
+          <motion.img
+            src="/nifes-logo.png"
+            alt="NIFES Logo"
             initial={{
               opacity: 0,
               y: -20,
@@ -379,10 +521,8 @@ export default function Home() {
             transition={{
               duration: 0.6,
             }}
-            className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-2xl shadow-blue-500/20 dark:shadow-blue-900/20"
-          >
-            <LayoutDashboard className="h-8 w-8 text-white" />
-          </motion.div>
+            className="mb-4 h-16 w-16 object-contain"
+          />
           <motion.h1
             initial={{
               opacity: 0,
@@ -396,7 +536,7 @@ export default function Home() {
               duration: 0.6,
               delay: 0.1,
             }}
-            className="text-3xl font-bold tracking-tight text-stone-900 dark:text-white sm:text-4xl"
+            className="text-3xl font-bold tracking-tight text-indigo-900 dark:text-white sm:text-4xl"
           >
             Fellowship Attendance
           </motion.h1>
@@ -411,7 +551,7 @@ export default function Home() {
               duration: 0.6,
               delay: 0.2,
             }}
-            className="mt-2 text-stone-600 dark:text-gray-400"
+            className="mt-2 text-indigo-600 dark:text-gray-400"
           >
             Real-time monitoring and session management
           </motion.p>
@@ -474,10 +614,8 @@ export default function Home() {
             />
             <SessionManagement
               currentSession={session}
-              onNewSession={() => {
-                // Add session creation logic later
-              }}
               onRefresh={refreshStats}
+              onNewSession={() => setShowNewSessionModal(true)}
               isLoadingStats={loadingStats}
             />
           </div>
@@ -490,6 +628,7 @@ export default function Home() {
         apiUrl={apiUrl}
         sessionId={session && (session._id || session.id)}
         onMarked={() => refreshStats()}
+        showToast={showToast}
       />
 
       {/* Register New Member Modal */}
@@ -498,10 +637,27 @@ export default function Home() {
           open={showRegisterModal}
           onClose={() => setShowRegisterModal(false)}
           onRegister={registerAndMarkFromModal}
+          showToast={showToast}
         />
       )}
 
-      {/* Success Message Modal */}
+      {/* New Session Modal */}
+      {showNewSessionModal && (
+        <CreateSessionModal
+          open={showNewSessionModal}
+          onClose={() => setShowNewSessionModal(false)}
+          onCreate={createNewSession}
+          showToast={showToast}
+        />
+      )}
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isOpen={showToastNotif}
+        onClose={() => setShowToastNotif(false)}
+      />
       {successMessage && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}

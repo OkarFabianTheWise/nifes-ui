@@ -1,79 +1,74 @@
-import React from 'react'
-import { motion } from 'framer-motion'
-import { Calendar, RefreshCw, Plus } from 'lucide-react'
+import { motion } from 'framer-motion';
+import { Calendar, RefreshCw, Plus } from 'lucide-react';
 
 export function SessionManagement({
   currentSession,
-  onNewSession,
   onRefresh,
+  onNewSession,
   isLoadingStats,
 }) {
+  const isTesting = process.env.NEXT_PUBLIC_TESTING === 'true';
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No date';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
     <motion.div
-      initial={{
-        opacity: 0,
-        y: 20,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
-      transition={{
-        duration: 0.5,
-        delay: 0.5,
-      }}
-      className="rounded-2xl border border-stone-200 dark:border-white/10 bg-white/80 dark:bg-white/5 p-6 backdrop-blur-xl shadow-lg shadow-stone-900/5 dark:shadow-none"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="bg-white dark:bg-white/5 rounded-lg p-4 shadow-sm border border-indigo-200 dark:border-white/10"
     >
-      <div className="mb-6">
-        <h3 className="text-lg font-medium text-stone-900 dark:text-white">
-          Session Control
-        </h3>
-        <div className="mt-4 rounded-xl border border-stone-200 dark:border-white/5 bg-stone-50 dark:bg-white/5 p-4">
-          <div className="flex items-start gap-3">
-            <div className="mt-1 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 p-2 text-blue-600 dark:text-blue-400">
-              <Calendar className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-stone-500 dark:text-gray-400">
-                {currentSession ? 'Active Session' : 'No Session'}
-              </p>
-              {currentSession ? (
-                <>
-                  <h4 className="mt-1 text-base font-semibold text-stone-900 dark:text-white">
-                    {currentSession.title}
-                  </h4>
-                  <p className="mt-1 text-xs text-stone-500 dark:text-gray-500">
-                    Started: {new Date(currentSession.date).toLocaleDateString()} •{' '}
-                    {new Date(currentSession.date).toLocaleTimeString()}
-                  </p>
-                </>
-              ) : (
-                <p className="mt-1 text-sm text-stone-600 dark:text-gray-400">
-                  Create a new session to start tracking attendance
-                </p>
-              )}
-            </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+            <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-semibold">Active Session</p>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+              {currentSession?.name || currentSession?.title || 'No Session'}
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {formatDate(currentSession?.date)}
+            </p>
           </div>
         </div>
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          onClick={onNewSession}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 px-4 py-3 text-sm font-medium text-stone-700 dark:text-white transition-all hover:bg-white dark:hover:bg-white/10 hover:border-stone-300 dark:hover:border-white/20 hover:shadow-md hover:shadow-stone-900/5 dark:hover:shadow-none active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          <span>New Session</span>
-        </button>
-        <button
-          onClick={onRefresh}
-          disabled={isLoadingStats}
-          className="flex items-center justify-center gap-2 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 px-4 py-3 text-sm font-medium text-stone-600 dark:text-gray-300 transition-all hover:bg-white dark:hover:bg-white/10 hover:text-stone-900 dark:hover:text-white hover:shadow-md hover:shadow-stone-900/5 dark:hover:shadow-none active:scale-95 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoadingStats ? 'animate-spin' : ''}`} />
-          <span className="sr-only">Refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onNewSession}
+            className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+            title="Create new session"
+          >
+            <Plus className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          </motion.button>
+          {isTesting && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onRefresh}
+              disabled={isLoadingStats}
+              className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh session data"
+            >
+              <RefreshCw
+                className={`w-5 h-5 text-indigo-600 dark:text-indigo-400 ${
+                  isLoadingStats ? 'animate-spin' : ''
+                }`}
+              />
+            </motion.button>
+          )}
+        </div>
       </div>
     </motion.div>
-  )
+  );
 }

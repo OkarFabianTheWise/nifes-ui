@@ -17,10 +17,10 @@ export function MemberRollCall({ members = [], isLoading = false }) {
         duration: 0.5,
         delay: 0.2,
       }}
-      className="flex h-full flex-col rounded-2xl border border-stone-200 dark:border-white/10 bg-white/80 dark:bg-white/5 p-6 backdrop-blur-xl shadow-lg shadow-stone-900/5 dark:shadow-none"
+      className="flex h-full flex-col rounded-2xl border border-indigo-200 dark:border-white/10 bg-white/80 dark:bg-white/5 p-6 backdrop-blur-xl shadow-lg shadow-indigo-900/5 dark:shadow-none"
     >
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-medium text-stone-900 dark:text-white">
+        <h3 className="text-lg font-medium text-indigo-900 dark:text-white">
           Live Roll Call
         </h3>
         <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 dark:bg-green-500/10 px-3 py-1 border border-emerald-500/20 dark:border-green-500/20">
@@ -46,7 +46,12 @@ export function MemberRollCall({ members = [], isLoading = false }) {
           </div>
         ) : (
           <>
-            <div className="absolute inset-0 overflow-y-auto pr-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-stone-300 dark:scrollbar-thumb-white/10 hover:scrollbar-thumb-stone-400 dark:hover:scrollbar-thumb-white/20">
+            <div 
+              className="overflow-y-auto pr-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-indigo-300 dark:scrollbar-thumb-white/10 hover:scrollbar-thumb-indigo-400 dark:hover:scrollbar-thumb-white/20"
+              style={{
+                height: '100%',
+              }}
+            >
               <div className="space-y-3">
                 {members.length > 0 ? (
                   members.map((member, index) => (
@@ -63,13 +68,13 @@ export function MemberRollCall({ members = [], isLoading = false }) {
                       transition={{
                         delay: 0.3 + index * 0.05,
                       }}
-                      className="group flex items-center justify-between rounded-xl border border-stone-200 dark:border-white/5 bg-stone-50 dark:bg-white/5 p-3 transition-all hover:bg-white dark:hover:bg-white/10 hover:shadow-md hover:shadow-stone-900/5 dark:hover:shadow-none"
+                      className="group flex items-center justify-between rounded-xl border border-indigo-200 dark:border-white/5 bg-indigo-50 dark:bg-white/5 p-3 transition-all hover:bg-white dark:hover:bg-white/10 hover:shadow-md hover:shadow-indigo-900/5 dark:hover:shadow-none"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-200 dark:bg-white/5 text-xs font-medium text-stone-600 dark:text-gray-400 group-hover:bg-blue-100 dark:group-hover:bg-white/10 group-hover:text-blue-700 dark:group-hover:text-white transition-colors">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-200 dark:bg-white/5 text-xs font-medium text-indigo-600 dark:text-gray-400 group-hover:bg-indigo-300 dark:group-hover:bg-white/10 group-hover:text-indigo-700 dark:group-hover:text-white transition-colors">
                           {member.name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-sm text-stone-700 dark:text-gray-200">
+                        <span className="text-sm text-indigo-900 dark:text-gray-200">
                           {member.name}
                         </span>
                       </div>
@@ -92,7 +97,7 @@ export function MemberRollCall({ members = [], isLoading = false }) {
             </div>
 
             {/* Fade at bottom for scroll hint */}
-            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white/80 dark:from-[#0a0a0a] to-transparent opacity-80" />
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-indigo-50/80 dark:from-[#0a0a0a] to-transparent opacity-80" />
           </>
         )}
       </div>
